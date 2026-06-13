@@ -29,3 +29,9 @@ extern NSString *ATApplicationGetVersionData;
 // Sent by the preference pane
 extern NSString *ATApplicationSendVersionData;
 extern NSString *ATApplicationShouldTerminateNotification;
+
+// Sent by the preference pane to ask the background process to toggle its login item
+extern NSString *ATApplicationToggleLoginItemNotification;
+// Sent by the background process in response, carrying login item status
+extern NSString *ATApplicationLoginItemStatusNotification;
+extern NSString *ATLoginItemStatusKey;

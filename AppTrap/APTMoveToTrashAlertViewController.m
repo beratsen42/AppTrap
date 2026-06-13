@@ -104,18 +104,10 @@ static CGFloat SmallHeight = 177.0;
 
 - (void)setUpWindow
 {
-	BOOL isExpanded = [[NSUserDefaults standardUserDefaults] boolForKey:ATPreferencesIsExpanded];
-	NSCellStateValue state;
-	if (isExpanded)
-	{
-		state = NSOnState;
-	}
-	else
-	{
-		state = NSOffState;
-	}
-	[self resizeWindowForState:state];
-	[self.showFileListButton setState:state];
+    BOOL isExpanded = [[NSUserDefaults standardUserDefaults] boolForKey:ATPreferencesIsExpanded];
+    NSControlStateValue state = isExpanded ? NSControlStateValueOn : NSControlStateValueOff;
+    [self resizeWindowForState:state];
+    [self.showFileListButton setState:state];
 }
 
 - (NSArray*)arrayControllerSortDescriptors
@@ -131,24 +123,24 @@ static CGFloat SmallHeight = 177.0;
 										   object:nil];
 }
 
-- (void)resizeWindowForState:(NSCellStateValue)state
+- (void)resizeWindowForState:(NSControlStateValue)state
 {
-	NSRect rect = self.mainWindow.frame;
-	
-	if (state == NSOnState)
-	{
-		CGFloat heightDifference = LargeHeight - self.mainWindow.frame.size.height;
-		rect.origin.y -= heightDifference;
-		rect.size.height = LargeHeight;
-	}
-	else
-	{
-		CGFloat heightDifference = self.mainWindow.frame.size.height - SmallHeight;
-		rect.origin.y += heightDifference;
-		rect.size.height = SmallHeight;
-	}
-	
-	[self.mainWindow setFrame:rect display:YES animate:YES];
+    NSRect rect = self.mainWindow.frame;
+
+    if (state == NSControlStateValueOn)
+    {
+        CGFloat heightDifference = LargeHeight - self.mainWindow.frame.size.height;
+        rect.origin.y -= heightDifference;
+        rect.size.height = LargeHeight;
+    }
+    else
+    {
+        CGFloat heightDifference = self.mainWindow.frame.size.height - SmallHeight;
+        rect.origin.y += heightDifference;
+        rect.size.height = SmallHeight;
+    }
+
+    [self.mainWindow setFrame:rect display:YES animate:YES];
 }
 
 #pragma mark - Interface Actions
@@ -188,31 +180,22 @@ static CGFloat SmallHeight = 177.0;
 
 - (IBAction)showFileList:(NSButton*)sender
 {
-	NSCellStateValue state = sender.state;
-	[self resizeWindowForState:sender.state];
-	BOOL isExpanded;
-	if (state == NSOnState)
-	{
-		isExpanded = YES;
-	}
-	else
-	{
-		isExpanded = NO;
-	}
-	[[NSUserDefaults standardUserDefaults] setBool:isExpanded forKey:ATPreferencesIsExpanded];
-	[[NSUserDefaults standardUserDefaults] synchronize];
+    NSControlStateValue state = sender.state;
+    [self resizeWindowForState:state];
+    BOOL isExpanded = (state == NSControlStateValueOn);
+    [[NSUserDefaults standardUserDefaults] setBool:isExpanded forKey:ATPreferencesIsExpanded];
 }
 
 #pragma mark - APTApplicationControllerDelegate Method
 
 - (void)applicationController:(APTApplicationController *)applicationController didFindFiles:(NSArray *)files
 {
-	if (files.count > 0)
-	{
-		[self.arrayController addPathsForDeletion:files];
-		[NSApp activateIgnoringOtherApps:YES];
-		[NSApp runModalForWindow:self.mainWindow];
-	}
+    if (files.count > 0)
+    {
+        [self.arrayController addPathsForDeletion:files];
+        [NSApp activate];
+        [NSApp runModalForWindow:self.mainWindow];
+    }
 }
 
 #pragma mark - APTPreferencePaneDelegate methods

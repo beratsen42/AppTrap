@@ -14,6 +14,7 @@
 static NSString *PreferencesFolderName = @"Preferences";
 static NSString *StartupItemsFolderName = @"StartupItems";
 static NSString *SandboxContainersFolderName = @"Containers";
+static NSString *GroupContainersFolderName = @"Group Containers";
 
 @interface APTApplicationController () <APTFSEventsWatcherDelegate>
 
@@ -76,10 +77,12 @@ static NSString *SandboxContainersFolderName = @"Containers";
         {
             NSString *preferencesDirectory = [directoryString stringByAppendingPathComponent:PreferencesFolderName];
             NSString *startupItemsDirectory = [directoryString stringByAppendingPathComponent:StartupItemsFolderName];
-			NSString *sandboxContainersDirectory = [directoryString stringByAppendingPathComponent:SandboxContainersFolderName];
+            NSString *sandboxContainersDirectory = [directoryString stringByAppendingPathComponent:SandboxContainersFolderName];
+            NSString *groupContainersDirectory = [directoryString stringByAppendingPathComponent:GroupContainersFolderName];
             [set addObject:preferencesDirectory];
             [set addObject:startupItemsDirectory];
-			[set addObject:sandboxContainersDirectory];
+            [set addObject:sandboxContainersDirectory];
+            [set addObject:groupContainersDirectory];
         }
         
         NSArray *directories = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
@@ -127,46 +130,46 @@ static NSString *SandboxContainersFolderName = @"Containers";
 
 - (void)moveFilesToTrash:(NSArray *)paths
 {
-	// Kill the events watcher before we move stuff to the trash
-	[self.eventsWatcher stopWatching];
-	[self setEventsWatcher:nil];
-	
-	NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
-	NSString *emptyString = @"";
-	for (NSString *path in paths)
-	{
-		NSString *source = path.stringByDeletingLastPathComponent;
-		NSString *fileName = path.lastPathComponent;
-		NSInteger tag;
-		BOOL success = [workspace performFileOperation:NSWorkspaceRecycleOperation
-												source:source
-										   destination:emptyString
-												 files:@[fileName]
-												   tag:&tag];
-		if (success)
-		{
-			NSLog(@"Successfully moved %@ to trash", path);
-		}
-		else
-		{
-			NSLog(@"Couldn't move %@ to trash (tag = %d)", path, (int)tag);
-		}
-	}
-	
-	// Create a new events watcher to monitor the trash
-	APTFSEventsWatcher *watcher = [[APTFSEventsWatcher alloc] initWithDirectoryPath:self.pathToTrash];
-	[self setEventsWatcher:watcher];
-	[watcher setDelegate:self];
-	[watcher startWatching];
+    [self.eventsWatcher stopWatching];
+    [self setEventsWatcher:nil];
+
+    NSMutableArray<NSURL *> *urls = [NSMutableArray arrayWithCapacity:paths.count];
+    for (NSString *path in paths)
+    {
+        [urls addObject:[NSURL fileURLWithPath:path]];
+    }
+
+    [[NSWorkspace sharedWorkspace] recycleURLs:urls completionHandler:^(NSDictionary<NSURL *, NSURL *> *newURLs, NSError *error) {
+        if (error)
+        {
+            NSLog(@"Error moving files to trash: %@", error);
+        }
+        else
+        {
+            NSLog(@"Successfully moved %lu file(s) to trash", (unsigned long)newURLs.count);
+        }
+    }];
+
+    APTFSEventsWatcher *watcher = [[APTFSEventsWatcher alloc] initWithDirectoryPath:self.pathToTrash];
+    [self setEventsWatcher:watcher];
+    [watcher setDelegate:self];
+    [watcher startWatching];
 }
 
 - (void)awokeFromSleep:(NSNotification*)notification
 {
-    NSTask *task = [NSTask new];
     NSString *launchPath = [[NSBundle mainBundle] pathForResource:@"RelaunchObjC" ofType:nil];
-    task.launchPath = launchPath;
+    if (!launchPath) return;
+
+    NSTask *task = [NSTask new];
+    task.executableURL = [NSURL fileURLWithPath:launchPath];
     task.arguments = @[[NSString stringWithFormat:@"%d", [NSProcessInfo processInfo].processIdentifier]];
-    [task launch];
+    NSError *error = nil;
+    [task launchAndReturnError:&error];
+    if (error)
+    {
+        NSLog(@"Failed to launch RelaunchObjC: %@", error);
+    }
 }
 
 #pragma mark - Core
