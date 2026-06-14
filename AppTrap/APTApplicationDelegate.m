@@ -6,11 +6,9 @@
 //
 
 #import "APTApplicationDelegate.h"
-
-#import "ATNotifications.h"
 #import <ServiceManagement/ServiceManagement.h>
 
-@interface APTApplicationDelegate () <NSApplicationDelegate, NSMenuDelegate>
+@interface APTApplicationDelegate () <NSApplicationDelegate>
 
 @property (nonatomic) IBOutlet NSWindow *window;
 @property (nonatomic) IBOutlet NSViewController *mainViewController;
@@ -26,45 +24,6 @@
 {
     [self.window setContentView:self.mainViewController.view];
     [self setupStatusItem];
-
-    NSDistributedNotificationCenter *dnc = [NSDistributedNotificationCenter defaultCenter];
-    [dnc addObserver:self
-            selector:@selector(handleToggleLoginItem:)
-                name:ATApplicationToggleLoginItemNotification
-              object:nil
-  suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
-}
-
-- (void)handleToggleLoginItem:(NSNotification *)notification
-{
-    if (@available(macOS 13.0, *))
-    {
-        SMAppService *service = [SMAppService mainAppService];
-        NSError *error = nil;
-        if (service.status == SMAppServiceStatusEnabled)
-        {
-            [service unregisterAndReturnError:&error];
-        }
-        else
-        {
-            [service registerAndReturnError:&error];
-        }
-        if (error)
-        {
-            NSLog(@"SMAppService error: %@", error);
-        }
-        BOOL enabled = (service.status == SMAppServiceStatusEnabled);
-        NSDictionary *info = @{ATLoginItemStatusKey: @(enabled)};
-        [[NSDistributedNotificationCenter defaultCenter]
-            postNotificationName:ATApplicationLoginItemStatusNotification
-                          object:nil
-                        userInfo:info
-              deliverImmediately:YES];
-
-        // Keep menu in sync
-        [self.statusItem.menu itemWithTitle:@"Start at Login"].state =
-            enabled ? NSControlStateValueOn : NSControlStateValueOff;
-    }
 }
 
 - (void)setupStatusItem
@@ -81,7 +40,6 @@
 - (NSMenu *)buildMenu
 {
     NSMenu *menu = [[NSMenu alloc] init];
-    menu.delegate = self;
 
     NSMenuItem *titleItem = [[NSMenuItem alloc] initWithTitle:@"AppTrap is Active" action:nil keyEquivalent:@""];
     titleItem.enabled = NO;
@@ -135,13 +93,6 @@
         }
         sender.state = [self isLoginItemEnabled] ? NSControlStateValueOn : NSControlStateValueOff;
     }
-}
-
-- (void)applicationWillTerminate:(NSNotification *)notification
-{
-    NSDistributedNotificationCenter *notificationCenter = [NSDistributedNotificationCenter defaultCenter];
-    [notificationCenter postNotificationName:ATApplicationTerminatedNotification
-                                      object:nil];
 }
 
 @end

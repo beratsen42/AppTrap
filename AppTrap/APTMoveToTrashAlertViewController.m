@@ -4,21 +4,17 @@
 //
 //  Created by Kumaran Vijayan on 2013-07-31.
 //
-//
 
 #import "APTMoveToTrashAlertViewController.h"
 
 #import "APTApplicationController.h"
 #import "ATArrayController.h"
 #import "ATUserDefaultKeys.h"
-#import "APTPreferencePaneDelegate.h"
-#import "ATNotifications.h"
-#import "ATVariables.h"
 
 static CGFloat LargeHeight = 402.0;
 static CGFloat SmallHeight = 177.0;
 
-@interface APTMoveToTrashAlertViewController () <APTApplicationControllerDelegate, APTPreferencePaneDelegate>
+@interface APTMoveToTrashAlertViewController () <APTApplicationControllerDelegate>
 
 @property (weak) IBOutlet NSWindow *mainWindow;
 
@@ -32,15 +28,11 @@ static CGFloat SmallHeight = 177.0;
 
 @property (weak) IBOutlet APTApplicationController *applicationController;
 @property (weak) IBOutlet ATArrayController *arrayController;
-@property (nonatomic, readonly) NSArray *arrayControllerSortDescriptors;
-
-@property (nonatomic) IBOutlet NSDistributedNotificationCenter *notificationCenter;
 
 - (void)viewDidLoad;
 - (void)setUpLabelsAndButtons;
 - (void)setUpWindow;
-- (void)sendApplicationDidFinishLaunchingNotification;
-- (void)resizeWindowForState:(NSCellStateValue)state;
+- (void)resizeWindowForState:(NSControlStateValue)state;
 
 - (IBAction)moveFiles:(id)sender;
 - (IBAction)leaveFiles:(id)sender;
@@ -52,54 +44,26 @@ static CGFloat SmallHeight = 177.0;
 
 @implementation APTMoveToTrashAlertViewController
 
-- (id)initWithCoder:(NSCoder *)aDecoder
-{
-	self = [super initWithCoder:aDecoder];
-	if (self)
-	{
-		NSDistributedNotificationCenter *nc = [NSDistributedNotificationCenter defaultCenter];
-		[self setNotificationCenter:nc];
-		[nc addObserver:self
-			   selector:@selector(preferencePaneRequestsTermination:)
-				   name:ATApplicationShouldTerminateNotification
-				 object:nil
-	 suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
-		
-		[nc addObserver:self
-			   selector:@selector(preferencePaneRequestsVersion:)
-				   name:ATApplicationSendVersionData
-				 object:nil
-	 suspensionBehavior:NSNotificationSuspensionBehaviorDeliverImmediately];
-	}
-	return self;
-}
-
 - (void)loadView
 {
-	[super loadView];
-	[self viewDidLoad];
+    [super loadView];
+    [self viewDidLoad];
 }
 
 - (void)viewDidLoad
 {
-	[self setUpLabelsAndButtons];
-	[self setUpWindow];
-	[self sendApplicationDidFinishLaunchingNotification];
-}
-
-- (void)dealloc
-{
-	[self.notificationCenter removeObserver:self];
+    [self setUpLabelsAndButtons];
+    [self setUpWindow];
 }
 
 - (void)setUpLabelsAndButtons
 {
-	[self.instructionLabel setStringValue:NSLocalizedString(@"You are moving an application to the trash, do you want to move its associated system files too?", nil)];
-	[self.explanationLabel setStringValue:NSLocalizedString(@"No files will be deleted until you empty the trash.", nil)];
-	[self.warningLabel setStringValue:NSLocalizedString(@"WARNING: The application may only be updating itself.", nil)];
-	
-	[self.leaveFilesButton setStringValue:NSLocalizedString(@"Leave files", nil)];
-	[self.moveFilesButton setStringValue:NSLocalizedString(@"Move files", nil)];
+    [self.instructionLabel setStringValue:NSLocalizedString(@"You are moving an application to the trash, do you want to move its associated system files too?", nil)];
+    [self.explanationLabel setStringValue:NSLocalizedString(@"No files will be deleted until you empty the trash.", nil)];
+    [self.warningLabel setStringValue:NSLocalizedString(@"WARNING: The application may only be updating itself.", nil)];
+
+    [self.leaveFilesButton setStringValue:NSLocalizedString(@"Leave files", nil)];
+    [self.moveFilesButton setStringValue:NSLocalizedString(@"Move files", nil)];
 }
 
 - (void)setUpWindow
@@ -108,19 +72,6 @@ static CGFloat SmallHeight = 177.0;
     NSControlStateValue state = isExpanded ? NSControlStateValueOn : NSControlStateValueOff;
     [self resizeWindowForState:state];
     [self.showFileListButton setState:state];
-}
-
-- (NSArray*)arrayControllerSortDescriptors
-{
-	NSSortDescriptor *sortDescriptor = [NSSortDescriptor sortDescriptorWithKey:@"path"
-																	 ascending:YES];
-	return @[sortDescriptor];
-}
-
-- (void)sendApplicationDidFinishLaunchingNotification
-{
-	[self.notificationCenter postNotificationName:ATApplicationFinishedLaunchingNotification
-										   object:nil];
 }
 
 - (void)resizeWindowForState:(NSControlStateValue)state
@@ -147,46 +98,42 @@ static CGFloat SmallHeight = 177.0;
 
 - (IBAction)moveFiles:(id)sender
 {
-	NSLog(@"%s", __func__);
-	NSMutableArray *paths = [NSMutableArray new];
-	for (NSDictionary *entry in self.arrayController.arrangedObjects)
-	{
-		BOOL shouldBeRemoved = ((NSNumber*)entry[@"shouldBeRemoved"]).boolValue;
-		if (shouldBeRemoved)
-		{
-			[paths addObject:entry[@"fullPath"]];
-		}
-	}
-	
-	[[NSProcessInfo processInfo] disableSuddenTermination];
-	[self.applicationController moveFilesToTrash:paths];
-	[[NSProcessInfo processInfo] enableSuddenTermination];
-	
-	NSArray *entries = self.arrayController.arrangedObjects;
-	[self.arrayController removeObjects:entries];
-	
-	[NSApp stopModal];
-	[self.mainWindow orderOut:self];
+    NSMutableArray *paths = [NSMutableArray new];
+    for (NSDictionary *entry in self.arrayController.arrangedObjects)
+    {
+        if (((NSNumber *)entry[@"shouldBeRemoved"]).boolValue)
+        {
+            [paths addObject:entry[@"fullPath"]];
+        }
+    }
+
+    [[NSProcessInfo processInfo] disableSuddenTermination];
+    [self.applicationController moveFilesToTrash:paths];
+    [[NSProcessInfo processInfo] enableSuddenTermination];
+
+    [self.arrayController removeObjects:self.arrayController.arrangedObjects];
+
+    [NSApp stopModal];
+    [self.mainWindow orderOut:self];
 }
 
 - (IBAction)leaveFiles:(id)sender
 {
-	NSArray *entries = self.arrayController.arrangedObjects;
-	[self.arrayController removeObjects:entries];
-	
-	[NSApp stopModal];
-	[self.mainWindow orderOut:self];
+    [self.arrayController removeObjects:self.arrayController.arrangedObjects];
+
+    [NSApp stopModal];
+    [self.mainWindow orderOut:self];
 }
 
-- (IBAction)showFileList:(NSButton*)sender
+- (IBAction)showFileList:(NSButton *)sender
 {
     NSControlStateValue state = sender.state;
     [self resizeWindowForState:state];
-    BOOL isExpanded = (state == NSControlStateValueOn);
-    [[NSUserDefaults standardUserDefaults] setBool:isExpanded forKey:ATPreferencesIsExpanded];
+    [[NSUserDefaults standardUserDefaults] setBool:(state == NSControlStateValueOn)
+                                           forKey:ATPreferencesIsExpanded];
 }
 
-#pragma mark - APTApplicationControllerDelegate Method
+#pragma mark - APTApplicationControllerDelegate
 
 - (void)applicationController:(APTApplicationController *)applicationController didFindFiles:(NSArray *)files
 {
@@ -196,23 +143,6 @@ static CGFloat SmallHeight = 177.0;
         [NSApp activate];
         [NSApp runModalForWindow:self.mainWindow];
     }
-}
-
-#pragma mark - APTPreferencePaneDelegate methods
-
-- (void)preferencePaneRequestsVersion:(id)sender
-{
-	NSString *bundleIdentifier = [[NSBundle mainBundle] objectForInfoDictionaryKey:(NSString*)kCFBundleVersionKey];
-	NSDictionary *userInfo = @{ATBackgroundProcessVersion: bundleIdentifier};
-	[self.notificationCenter postNotificationName:ATApplicationGetVersionData
-										   object:nil
-										 userInfo:userInfo
-							   deliverImmediately:YES];
-}
-
-- (void)preferencePaneRequestsTermination:(id)sender
-{
-	[[NSApplication sharedApplication] terminate:self];
 }
 
 @end

@@ -20,13 +20,4 @@
 
 #import "ATNotifications.h"
 
-NSString *ATApplicationFinishedLaunchingNotification = @"ATApplicationFinishedLaunchingNotification";
 NSString *ATApplicationTerminatedNotification = @"ATApplicationTerminatedNotification";
-NSString *ATApplicationGetVersionData = @"ATApplicationGetVersionData";
-
-NSString *ATApplicationSendVersionData = @"ATApplicationSendVersionData";
-NSString *ATApplicationShouldTerminateNotification = @"ATApplicationShouldTerminateNotification";
-
-NSString *ATApplicationToggleLoginItemNotification = @"ATApplicationToggleLoginItemNotification";
-NSString *ATApplicationLoginItemStatusNotification = @"ATApplicationLoginItemStatusNotification";
-NSString *ATLoginItemStatusKey = @"ATLoginItemStatusKey";
