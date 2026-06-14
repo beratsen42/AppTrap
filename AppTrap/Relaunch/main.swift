@@ -4,53 +4,44 @@
 //
 //  Created by Kumaran Vijayan on 2015-11-11.
 //
-//
 
 import AppKit
 
 class Observer: NSObject
 {
     private let callback: () -> Void
-    
-    private init(callback: () -> Void)
+
+    init(callback: @escaping () -> Void)
     {
         self.callback = callback
         super.init()
     }
-    
-    override func observeValueForKeyPath(
-        keyPath: String?,
-        ofObject object: AnyObject?,
-        change: [String : AnyObject]?,
-        context: UnsafeMutablePointer<Void>)
+
+    override func observeValue(
+        forKeyPath keyPath: String?,
+        of object: Any?,
+        change: [NSKeyValueChangeKey: Any]?,
+        context: UnsafeMutableRawPointer?)
     {
         callback()
     }
 }
 
 // main
-autoreleasepool
-{
-    // get the application instance
-    if let parentPID = Int32(Process.arguments[1]),
-        app = NSRunningApplication(processIdentifier: parentPID),
-        bundleURL = app.bundleURL
-    {
-        // terminate() and wait terminated.
-        let listener = Observer { CFRunLoopStop(CFRunLoopGetCurrent()) }
-        app.addObserver(
-            listener,
-            forKeyPath: "isTerminated",
-            options: NSKeyValueObservingOptions(rawValue: 0),
-            context: nil)
-        app.terminate()
-        CFRunLoopRun() // wait KVO notification
-        app.removeObserver(listener, forKeyPath: "isTerminated", context: nil)
-        
-        // relaunch
-        try! NSWorkspace.sharedWorkspace().launchApplicationAtURL(
-            bundleURL,
-            options: .Default,
-            configuration: [:])
-    }
+autoreleasepool {
+    guard let parentPID = Int32(CommandLine.arguments[1]),
+          let app = NSRunningApplication(processIdentifier: parentPID),
+          let bundleURL = app.bundleURL
+    else { exit(1) }
+
+    let listener = Observer { CFRunLoopStop(CFRunLoopGetCurrent()) }
+    app.addObserver(listener, forKeyPath: "isTerminated", options: [], context: nil)
+    app.terminate()
+    CFRunLoopRun()
+    app.removeObserver(listener, forKeyPath: "isTerminated", context: nil)
+
+    let config = NSWorkspace.OpenConfiguration()
+    config.addsToRecentItems = false
+    config.activates = false
+    NSWorkspace.shared.openApplication(at: bundleURL, configuration: config)
 }
