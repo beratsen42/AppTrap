@@ -11,7 +11,7 @@
 # - <menubar-glyph.png>   Square, black silhouette on a transparent background.
 #
 # Run it from the repository root. It writes the resized PNGs directly into
-# AppTrap/Assets.xcassets, then you can build in Xcode.
+# AppClaw/Assets.xcassets, then you can build in Xcode.
 
 set -euo pipefail
 
@@ -25,7 +25,7 @@ MENUBAR_SRC="$2"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-ASSETS="$REPO_ROOT/AppTrap/Assets.xcassets"
+ASSETS="$REPO_ROOT/AppClaw/Assets.xcassets"
 APPICON_DIR="$ASSETS/AppIcon.appiconset"
 MENUBAR_DIR="$ASSETS/MenuBarIcon.imageset"
 

@@ -1,5 +1,4 @@
 xcuserdata/
-
 DerivedData/
-
-AppTrapPreferencePane/AppTrap.app
+build/
+.DS_Store
