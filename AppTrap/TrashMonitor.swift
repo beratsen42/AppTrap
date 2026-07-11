@@ -15,6 +15,8 @@ final class TrashMonitor {
 
     private var stream: FSEventStreamRef?
     private let trashURL: URL
+    // Serial queue the FSEvents callback runs on; also guards notifiedPaths
+    private let queue = DispatchQueue(label: "com.apptrap.TrashMonitor")
     // Paths of app bundles already reported to the delegate
     private var notifiedPaths: Set<String> = []
 
@@ -42,7 +44,7 @@ final class TrashMonitor {
                                           FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
                                           1.5, flags) else { return }
 
-        FSEventStreamScheduleWithRunLoop(s, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
+        FSEventStreamSetDispatchQueue(s, queue)
         FSEventStreamStart(s)
         stream = s
     }
