@@ -15,11 +15,11 @@ final class PermissionsManager {
         alert.alertStyle = .informational
         alert.messageText = "Full Disk Access Required"
         alert.informativeText = """
-            AppTrap needs Full Disk Access to find application support \
+            AppClaw needs Full Disk Access to find application support \
             files when apps are moved to the Trash.
 
             Open System Settings → Privacy & Security → Full Disk Access \
-            and enable AppTrap. The change takes effect immediately.
+            and enable AppClaw. The change takes effect immediately.
             """
         alert.addButton(withTitle: "Open System Settings")
         alert.addButton(withTitle: "Later")

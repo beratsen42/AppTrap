@@ -17,7 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "trash.circle.fill", accessibilityDescription: "AppTrap")
+            button.image = NSImage(systemSymbolName: "trash.circle.fill", accessibilityDescription: "AppClaw")
             button.image?.isTemplate = true
         }
         statusItem?.menu = buildMenu()
@@ -26,7 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func buildMenu() -> NSMenu {
         let menu = NSMenu()
 
-        let header = NSMenuItem(title: "AppTrap", action: nil, keyEquivalent: "")
+        let header = NSMenuItem(title: "AppClaw", action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
 
@@ -38,7 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
 
-        menu.addItem(NSMenuItem(title: "Quit AppTrap", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "Quit AppClaw", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         return menu
     }

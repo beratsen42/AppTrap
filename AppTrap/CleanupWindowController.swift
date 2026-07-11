@@ -22,7 +22,7 @@ final class CleanupWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        panel.title = "AppTrap"
+        panel.title = "AppClaw"
         panel.level = .floating
         panel.isReleasedWhenClosed = false
         panel.center()
