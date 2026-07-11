@@ -17,8 +17,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "trash.circle.fill", accessibilityDescription: "AppClaw")
-            button.image?.isTemplate = true
+            let image = NSImage(named: "MenuBarIcon")
+                ?? NSImage(systemSymbolName: "trash.circle.fill", accessibilityDescription: "AppClaw")
+            image?.isTemplate = true
+            button.image = image
         }
         statusItem?.menu = buildMenu()
     }
