@@ -50,7 +50,8 @@ final class CleanupWindowController: NSWindowController {
         let keepBtn = makeButton("Keep", key: "\u{1B}", action: #selector(keepPressed))
         let moveBtn = makeButton("Move to Trash", key: "\r", action: #selector(movePressed))
 
-        for v in [icon, titleLabel, subtitleLabel, selectAllButton, scroll, keepBtn, moveBtn] {
+        let subviews: [NSView] = [icon, titleLabel, subtitleLabel, selectAllButton, scroll, keepBtn, moveBtn]
+        for v in subviews {
             content.addSubview(v)
         }
 
